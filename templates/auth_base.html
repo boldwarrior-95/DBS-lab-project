@@ -6,14 +6,12 @@
 <title>{% block title %}D-SCAE{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <style>
-  /* ── Split-screen auth layout ── */
   .auth-shell {
     display: flex;
     min-height: 100vh;
     width: 100%;
   }
 
-  /* Left panel — form side */
   .auth-left {
     flex: 1;
     display: flex;
@@ -70,7 +68,6 @@
     line-height: 1.6;
   }
 
-  /* Right panel — decorative hero */
   .auth-right {
     flex: 1;
     background: linear-gradient(145deg, #1a1040 0%, #0f1a3a 40%, #0a2540 100%);
@@ -128,7 +125,6 @@
     margin-bottom: 48px;
   }
 
-  /* ── Mini chart illustration ── */
   .chart-illust {
     display: flex;
     align-items: flex-end;
@@ -159,7 +155,6 @@
     to   { transform: scaleY(1); opacity: 1; }
   }
 
-  /* ── Floating blobs ── */
   .float-shape {
     position: absolute;
     border-radius: 50%;
@@ -200,7 +195,6 @@
     50%      { transform: translateX(15px) rotate(-8deg); }
   }
 
-  /* ── Stats pills on right panel ── */
   .hero-stats {
     display: flex;
     justify-content: center;
@@ -223,7 +217,6 @@
     letter-spacing: 0.5px;
   }
 
-  /* ── Form polish ── */
   .auth-form-wrapper .form-group label {
     font-size: 12px;
     color: var(--text-2);
@@ -242,7 +235,6 @@
     background: var(--surface);
   }
 
-  /* ── Responsive ── */
   @media (max-width: 900px) {
     .auth-right { display: none; }
     .auth-left { padding: 32px 24px; }
@@ -253,7 +245,6 @@
     50%      { opacity: 0.4; }
   }
 
-  /* ── Stagger form entry ── */
   .auth-form-wrapper .form-group,
   .auth-form-wrapper .btn,
   .auth-form-wrapper > div {

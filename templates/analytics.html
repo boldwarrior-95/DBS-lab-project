@@ -4,7 +4,6 @@
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <style>
-  /* ── KPI Cards with gradient tops ── */
   .kpis {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -70,7 +69,6 @@
     color: var(--text-3);
   }
 
-  /* Glow orbs */
   .kpi .glow {
     position: absolute;
     width: 140px; height: 140px;
@@ -83,7 +81,6 @@
   .kpi:nth-child(2) .glow { background: var(--sky); }
   .kpi:nth-child(3) .glow { background: var(--accent); }
 
-  /* ── Charts grid — 2x2 layout ── */
   .charts-grid {
     display: grid;
     grid-template-columns: 300px 1fr;
@@ -115,7 +112,6 @@
     font-style: italic;
   }
 
-  /* Ring chart */
   .ring-card {
     text-align: center;
   }
@@ -152,10 +148,8 @@
     display: inline-block;
   }
 
-  /* Full-width cards */
   .chart-full { grid-column: 1 / -1; }
 
-  /* ── Question grid ── */
   .sec-title {
     font-size: 13px;
     font-weight: 600;
@@ -266,7 +260,6 @@
   .m-box .m-val.rose { color: #f87171; }
   .m-box .m-val.accent { color: var(--accent); }
 
-  /* Top values badges */
   .top-values {
     display: flex;
     flex-wrap: wrap;
@@ -294,7 +287,6 @@
     border-radius: 4px;
   }
 
-  /* Boolean bar */
   .bool-bar-wrap {
     margin-top: 12px;
   }
@@ -333,7 +325,6 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* KPI entrance */
   .kpi {
     animation: kpiPop 0.5s ease-out both;
   }

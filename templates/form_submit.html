@@ -25,6 +25,12 @@
           <input id="field_{{ f.field_id }}" name="field_{{ f.field_id }}" type="number" step="any" {% if f.is_required %}required{% endif %} autocomplete="off" />
         {% elif ft == 'DATE' %}
           <input id="field_{{ f.field_id }}" name="field_{{ f.field_id }}" type="date" {% if f.is_required %}required{% endif %} autocomplete="off" />
+        {% elif ft == 'BOOLEAN' %}
+          <select id="field_{{ f.field_id }}" name="field_{{ f.field_id }}" {% if f.is_required %}required{% endif %}>
+            <option value="">— Select —</option>
+            <option value="YES">Yes</option>
+            <option value="NO">No</option>
+          </select>
         {% else %}
           <input id="field_{{ f.field_id }}" name="field_{{ f.field_id }}" type="text" {% if f.is_required %}required{% endif %} autocomplete="off" />
         {% endif %}

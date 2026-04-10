@@ -57,7 +57,7 @@
     <form method="POST" action="/forms/{{ form_id }}/fields">
       <div class="form-group"><label for="field_name">Field Name</label><input id="field_name" name="field_name" type="text" placeholder="e.g., Target Role" required /></div>
       <div class="form-group"><label for="field_type">Type</label>
-        <select id="field_type" name="field_type" required><option value="TEXT">TEXT</option><option value="NUMERIC">NUMERIC</option><option value="DATE">DATE</option></select>
+        <select id="field_type" name="field_type" required><option value="TEXT">TEXT</option><option value="NUMERIC">NUMERIC</option><option value="BOOLEAN">BOOLEAN</option><option value="DATE">DATE</option></select>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
         <div class="form-group"><label for="display_order">Order</label><input id="display_order" name="display_order" type="number" min="1" value="1" /></div>

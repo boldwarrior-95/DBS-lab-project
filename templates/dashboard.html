@@ -3,7 +3,6 @@
 
 {% block extra_head %}
 <style>
-  /* ── Animated stat cards with gradient accents ── */
   .stats-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -66,7 +65,6 @@
     font-family: 'JetBrains Mono', monospace;
   }
 
-  /* Glow background orb per stat */
   .stat .glow-orb {
     position: absolute;
     width: 120px; height: 120px;
@@ -79,7 +77,6 @@
   .stat:nth-child(2) .glow-orb { background: var(--sky); }
   .stat:nth-child(3) .glow-orb { background: var(--rose); }
 
-  /* ── Toolbar ── */
   .toolbar {
     display: flex;
     justify-content: space-between;
@@ -122,7 +119,6 @@
     pointer-events: none;
   }
 
-  /* ── Form cards ── */
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -231,7 +227,6 @@
   .empty-box h3 { font-size: 16px; color: var(--text-2); margin-bottom: 8px; }
   .empty-box p { font-size: 14px; }
 
-  /* ── Stagger card entrance ── */
   .fcard {
     animation: cardIn 0.4s ease-out both;
   }
@@ -247,7 +242,6 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── Stat entrance ── */
   .stat {
     animation: statPop 0.5s ease-out both;
   }
