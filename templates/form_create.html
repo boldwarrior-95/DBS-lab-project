@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}D-SCAE — Create Form{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+  <div>
+    <h1 class="page-title">Create a new form</h1>
+    <p class="page-sub">Define the details, then add fields and access rules.</p>
+  </div>
+  <a class="btn btn-outline btn-sm" href="/dashboard">← Back</a>
+</div>
+
+<div class="card" style="max-width: 700px;">
+  <form method="POST" action="/forms/new">
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input id="title" name="title" type="text" placeholder="e.g., Internship Registration" required>
+    </div>
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" rows="3" placeholder="A short description for students." required style="resize: vertical;"></textarea>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div class="form-group">
+        <label for="start_date">Start date</label>
+        <input id="start_date" name="start_date" type="date" required>
+      </div>
+      <div class="form-group">
+        <label for="end_date">End date</label>
+        <input id="end_date" name="end_date" type="date" required>
+      </div>
+    </div>
+    <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
+      <a class="btn btn-outline" href="/dashboard">Cancel</a>
+      <button class="btn btn-primary" type="submit">Create form →</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

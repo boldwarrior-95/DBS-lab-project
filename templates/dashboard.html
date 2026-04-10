@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% block title %}D-SCAE — Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Animated stat cards with gradient accents ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .stat:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  }
+  .stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 16px 16px 0 0;
+  }
+  .stat:nth-child(1)::before { background: linear-gradient(90deg, var(--teal), #059669); }
+  .stat:nth-child(2)::before { background: linear-gradient(90deg, var(--sky), #3b82f6); }
+  .stat:nth-child(3)::before { background: linear-gradient(90deg, var(--rose), #dc2626); }
+
+  .stat .stat-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  .stat:nth-child(1) .stat-icon { background: rgba(52,211,153,0.1); color: var(--teal); }
+  .stat:nth-child(2) .stat-icon { background: rgba(96,165,250,0.1); color: var(--sky); }
+  .stat:nth-child(3) .stat-icon { background: rgba(248,113,113,0.1); color: var(--rose); }
+
+  .stat .num {
+    font-size: 36px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat:nth-child(1) .num { color: var(--teal); }
+  .stat:nth-child(2) .num { color: var(--sky); }
+  .stat:nth-child(3) .num { color: var(--rose); }
+
+  .stat .lbl {
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Glow background orb per stat */
+  .stat .glow-orb {
+    position: absolute;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    bottom: -40px; right: -30px;
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .stat:nth-child(1) .glow-orb { background: var(--teal); }
+  .stat:nth-child(2) .glow-orb { background: var(--sky); }
+  .stat:nth-child(3) .glow-orb { background: var(--rose); }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .toolbar h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-2);
+    letter-spacing: 0.2px;
+  }
+
+  .search-wrap {
+    position: relative;
+    width: 300px;
+  }
+  .search-wrap input {
+    padding: 12px 16px 12px 42px;
+    border-radius: 14px;
+    background: var(--surface);
+    font-size: 13px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .search-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-glow);
+    background: var(--surface-2);
+  }
+  .search-wrap .ico {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  /* ── Form cards ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+
+  .fcard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .fcard::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-lg);
+    border: 1px solid transparent;
+    transition: border-color 0.3s;
+    pointer-events: none;
+  }
+  .fcard:hover {
+    border-color: var(--border-2);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  }
+  .fcard:hover::after {
+    border-color: var(--accent-muted);
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-right: 6px;
+    margin-bottom: 14px;
+  }
+  .tag.open       { background: rgba(52,211,153,0.12); color: var(--teal); border: 1px solid rgba(52,211,153,0.2); }
+  .tag.closed     { background: rgba(255,255,255,0.04); color: var(--text-3); border: 1px solid var(--border); }
+  .tag.draft      { background: rgba(251,191,36,0.12); color: var(--warning); border: 1px solid rgba(251,191,36,0.2); }
+  .tag.eligible   { background: rgba(96,165,250,0.12); color: var(--sky); border: 1px solid rgba(96,165,250,0.2); }
+  .tag.ineligible { background: rgba(248,113,113,0.12); color: var(--rose); border: 1px solid rgba(248,113,113,0.2); }
+
+  .fcard h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .fcard .desc {
+    font-size: 13px;
+    color: var(--text-3);
+    line-height: 1.6;
+    margin-bottom: 16px;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .fcard .meta {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .fcard .meta span { color: var(--warning); }
+  .fcard .meta::before {
+    content: '◈';
+    color: var(--text-3);
+    opacity: 0.4;
+  }
+
+  .fcard .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .fcard .actions a, .fcard .actions button { flex: 1; text-align: center; border-radius: 10px; }
+
+  .empty-box {
+    text-align: center;
+    padding: 80px 20px;
+    background: var(--surface);
+    border: 1px dashed var(--border-2);
+    border-radius: var(--radius-lg);
+    color: var(--text-3);
+  }
+  .empty-box .big { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-box h3 { font-size: 16px; color: var(--text-2); margin-bottom: 8px; }
+  .empty-box p { font-size: 14px; }
+
+  /* ── Stagger card entrance ── */
+  .fcard {
+    animation: cardIn 0.4s ease-out both;
+  }
+  .fcard:nth-child(1) { animation-delay: 0.05s; }
+  .fcard:nth-child(2) { animation-delay: 0.10s; }
+  .fcard:nth-child(3) { animation-delay: 0.15s; }
+  .fcard:nth-child(4) { animation-delay: 0.20s; }
+  .fcard:nth-child(5) { animation-delay: 0.25s; }
+  .fcard:nth-child(6) { animation-delay: 0.30s; }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Stat entrance ── */
+  .stat {
+    animation: statPop 0.5s ease-out both;
+  }
+  .stat:nth-child(1) { animation-delay: 0.1s; }
+  .stat:nth-child(2) { animation-delay: 0.2s; }
+  .stat:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes statPop {
+    from { opacity: 0; transform: scale(0.92) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{% if session.role == 'admin' %}Forms Overview{% else %}Available Forms{% endif %}</h1>
+  <p class="page-sub">{% if session.role == 'admin' %}Manage and monitor data collection events.{% else %}Browse forms you are eligible to complete.{% endif %}</p>
+</div>
+
+{% if session.role == 'admin' %}
+<div class="stats-row">
+  <div class="stat">
+    <div class="stat-icon">▶</div>
+    <div class="num" data-count="{{ forms | selectattr('status','eq','open') | list | length }}">0</div>
+    <div class="lbl">Active Forms</div>
+    <div class="glow-orb"></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon">◇</div>
+    <div class="num" data-count="{{ forms | length }}">0</div>
+    <div class="lbl">Total Forms</div>
+    <div class="glow-orb"></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon">✕</div>
+    <div class="num" data-count="{{ forms | selectattr('status','eq','closed') | list | length }}">0</div>
+    <div class="lbl">Closed</div>
+    <div class="glow-orb"></div>
+  </div>
+</div>
+{% endif %}
+
+<div class="toolbar">
+  <h2>{% if session.role == 'admin' %}All Forms{% else %}Your Forms{% endif %}</h2>
+  {% if forms %}
+  <div class="search-wrap">
+    <span class="ico">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search forms…" autocomplete="off">
+  </div>
+  {% endif %}
+</div>
+
+{% if forms %}
+<div class="grid" id="formsGrid">
+  {% for f in forms %}
+  <div class="fcard" data-title="{{ f.title | lower }}" data-desc="{{ f.description | lower | default('') }}">
+    <div>
+      <span class="tag {{ f.status }}">{{ f.status }}</span>
+      {% if session.role == 'student' and f.eligible is defined %}
+        <span class="tag {% if f.eligible == 'ELIGIBLE' %}eligible{% else %}ineligible{% endif %}">{{ f.eligible }}</span>
+      {% endif %}
+    </div>
+    <h3>{{ f.title }}</h3>
+    <p class="desc">{{ f.description if f.description else "No description." }}</p>
+    <div class="meta">Deadline <span>{{ f.end_date.strftime('%d %b %Y') if f.end_date and f.end_date.strftime is defined else f.end_date }}</span></div>
+    <div class="actions">
+      {% if session.role == 'admin' %}
+        <a href="/forms/{{ f.form_id }}/fields" class="btn btn-outline btn-sm">Fields</a>
+        <a href="/forms/{{ f.form_id }}/rules" class="btn btn-outline btn-sm">Rules</a>
+        <a href="/analytics/{{ f.form_id }}" class="btn btn-primary btn-sm" style="flex: 2;">Analytics →</a>
+      {% else %}
+        {% if f.eligible == 'ELIGIBLE' and f.status == 'open' %}
+          <a href="/forms/{{ f.form_id }}/submit" class="btn btn-primary btn-sm" style="width: 100%;">Fill Form →</a>
+        {% else %}
+          <button class="btn btn-outline btn-sm" style="width:100%; opacity:0.4; cursor:not-allowed;" disabled>Not Eligible</button>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div id="noResults" class="empty-box" style="display: none; margin-top: 20px;">
+  <div class="big">∅</div>
+  <h3>No matching forms</h3>
+  <p>Try different search terms.</p>
+</div>
+{% else %}
+<div class="empty-box">
+  <div class="big">◇</div>
+  <h3>No forms yet</h3>
+  <p>There are currently no forms to display.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // ── Animated number counters ──
+  document.querySelectorAll('.stat .num[data-count]').forEach(el => {
+    const target = parseInt(el.dataset.count, 10);
+    if (isNaN(target) || target === 0) { el.textContent = '0'; return; }
+    let current = 0;
+    const duration = 1200;
+    const step = Math.max(1, Math.floor(target / (duration / 30)));
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= target) { current = target; clearInterval(timer); }
+      el.textContent = current;
+    }, 30);
+  });
+
+  // ── Search filter ──
+  const input = document.getElementById('searchInput');
+  const cards = document.querySelectorAll('.fcard');
+  const grid  = document.getElementById('formsGrid');
+  const empty = document.getElementById('noResults');
+  if (!input) return;
+  input.addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    let any = false;
+    cards.forEach(c => {
+      const match = c.dataset.title.includes(q) || c.dataset.desc.includes(q);
+      c.style.display = match ? 'flex' : 'none';
+      if (match) any = true;
+    });
+    grid.style.display  = any ? 'grid' : 'none';
+    empty.style.display = any ? 'none' : 'block';
+  });
+});
+</script>
+{% endblock %}

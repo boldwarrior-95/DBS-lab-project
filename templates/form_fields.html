@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}D-SCAE — Form Fields{% endblock %}
+
+{% block extra_head %}
+<style>
+  .layout { display:grid; grid-template-columns:1.5fr 1fr; gap:20px; align-items:start; }
+  @media (max-width:900px) { .layout { grid-template-columns:1fr; } }
+  .sec-title { font-size:12px; font-weight:600; color:var(--text-3); letter-spacing:1px; text-transform:uppercase; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); font-family:'JetBrains Mono',monospace; }
+  .tag { display:inline-block; padding:3px 8px; font-size:10px; font-weight:600; border-radius:4px; font-family:'JetBrains Mono',monospace; letter-spacing:0.3px; }
+  .tag.type { background:rgba(96,165,250,0.1); color:var(--sky); border:1px solid rgba(96,165,250,0.15); }
+  .tag.req  { background:rgba(52,211,153,0.1); color:var(--teal); border:1px solid rgba(52,211,153,0.15); }
+  .tag.opt  { background:rgba(251,191,36,0.1); color:var(--warning); border:1px solid rgba(251,191,36,0.15); }
+  .check-row { display:flex; align-items:flex-start; gap:10px; padding:14px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-subtle); cursor:pointer; transition:border-color 0.15s; }
+  .check-row:hover { border-color: var(--accent); }
+  .check-row input { width:16px; height:16px; margin-top:2px; accent-color:var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+  <div>
+    <h1 class="page-title">Form Fields</h1>
+    <p class="page-sub">Schema for Form #{{ form_id }}</p>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <a class="btn btn-outline btn-sm" href="/forms/{{ form_id }}/rules">Rules</a>
+    <a class="btn btn-outline btn-sm" href="/analytics/{{ form_id }}">Analytics</a>
+    <a class="btn btn-outline btn-sm" href="/dashboard">← Back</a>
+  </div>
+</div>
+<div class="layout">
+  <section class="table-container">
+    <div style="padding:20px;">
+      <div class="sec-title">Current Fields</div>
+      {% if fields and fields|length > 0 %}
+      <table>
+        <thead><tr><th style="width:60px">#</th><th>Field</th><th style="width:100px">Type</th><th style="width:90px">Req?</th><th style="width:140px">Validation</th></tr></thead>
+        <tbody>
+          {% for f in fields %}
+          <tr>
+            <td class="mono" style="color:var(--text-3)">{{ f.display_order }}</td>
+            <td><span style="font-weight:600; color:var(--text)">{{ f.field_name }}</span><br><span style="font-size:10px; color:var(--text-3)" class="mono">ID {{ f.field_id }}</span></td>
+            <td><span class="tag type">{{ f.field_type }}</span></td>
+            <td><span class="tag {% if f.is_required %}req{% else %}opt{% endif %}">{% if f.is_required %}Required{% else %}Optional{% endif %}</span></td>
+            <td style="color:var(--text-3); font-size:12px;">{{ f.validation_rule if f.validation_rule else "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="text-align:center; padding:36px; color:var(--text-3); border:1px dashed var(--border); border-radius:var(--radius);">No fields yet. Add one →</div>
+      {% endif %}
+    </div>
+  </section>
+  <aside class="card">
+    <div class="sec-title">Add Field</div>
+    <form method="POST" action="/forms/{{ form_id }}/fields">
+      <div class="form-group"><label for="field_name">Field Name</label><input id="field_name" name="field_name" type="text" placeholder="e.g., Target Role" required /></div>
+      <div class="form-group"><label for="field_type">Type</label>
+        <select id="field_type" name="field_type" required><option value="TEXT">TEXT</option><option value="NUMERIC">NUMERIC</option><option value="DATE">DATE</option></select>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group"><label for="display_order">Order</label><input id="display_order" name="display_order" type="number" min="1" value="1" /></div>
+        <div class="form-group"><label for="validation_rule">Validation</label><input id="validation_rule" name="validation_rule" type="text" placeholder="Optional" /></div>
+      </div>
+      <div class="form-group">
+        <label class="check-row" for="is_required">
+          <input id="is_required" name="is_required" type="checkbox" />
+          <div><div style="font-weight:600; color:var(--text); font-size:13px;">Required field</div><div style="font-size:11px; color:var(--text-3); margin-top:3px;">Must be filled before submitting.</div></div>
+        </label>
+      </div>
+      <button class="btn btn-primary" type="submit" style="width:100%;">Add Field</button>
+    </form>
+  </aside>
+</div>
+{% endblock %}

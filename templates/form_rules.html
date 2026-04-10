@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}D-SCAE — Access Rules{% endblock %}
+
+{% block extra_head %}
+<style>
+  .layout { display:grid; grid-template-columns:1.5fr 1fr; gap:20px; align-items:start; }
+  @media (max-width:900px) { .layout { grid-template-columns:1fr; } }
+  .sec-title { font-size:12px; font-weight:600; color:var(--text-3); letter-spacing:1px; text-transform:uppercase; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); font-family:'JetBrains Mono',monospace; }
+  .tag { display:inline-block; padding:3px 8px; font-size:10px; font-weight:600; border-radius:4px; font-family:'JetBrains Mono',monospace; letter-spacing:0.3px; }
+  .tag.attr { background:rgba(167,139,250,0.1); color:var(--violet); border:1px solid rgba(167,139,250,0.15); }
+  .tag.op   { background:rgba(96,165,250,0.1); color:var(--sky); border:1px solid rgba(96,165,250,0.15); }
+  .sep { height:1px; background:var(--border); margin:20px 0; }
+  .hint-box { padding:14px; border:1px solid rgba(96,165,250,0.15); border-radius:var(--radius); background:rgba(96,165,250,0.04); color:var(--sky); font-size:12px; line-height:1.6; margin-bottom:20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+  <div>
+    <h1 class="page-title">Access Rules</h1>
+    <p class="page-sub">Eligibility predicates for Form #{{ form_id }}</p>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <a class="btn btn-outline btn-sm" href="/forms/{{ form_id }}/fields">Fields</a>
+    <a class="btn btn-outline btn-sm" href="/analytics/{{ form_id }}">Analytics</a>
+    <a class="btn btn-outline btn-sm" href="/dashboard">← Back</a>
+  </div>
+</div>
+<div class="layout">
+  <section class="table-container">
+    <div style="padding:20px;">
+      <div class="sec-title">Current Rules</div>
+      {% if rules and rules|length > 0 %}
+      <table>
+        <thead><tr><th style="width:70px">ID</th><th>Attribute</th><th style="width:90px">Op</th><th>Value</th></tr></thead>
+        <tbody>
+          {% for r in rules %}
+          <tr>
+            <td class="mono" style="color:var(--text-3)">{{ r.rule_id }}</td>
+            <td><span class="tag attr">{{ r.attribute_name }}</span></td>
+            <td><span class="tag op">{{ r.operator }}</span></td>
+            <td style="font-weight:600; color:var(--text)">{{ r.attribute_value }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="text-align:center; padding:36px; color:var(--text-3); border:1px dashed var(--border); border-radius:var(--radius);">No access rules yet.</div>
+      {% endif %}
+    </div>
+  </section>
+  <aside class="card">
+    <div class="sec-title">Add Rule</div>
+    <div class="hint-box">Rules determine who can fill this form by matching profile data.</div>
+    <form method="POST" action="/forms/{{ form_id }}/rules" style="margin-bottom:20px;">
+      <input type="hidden" name="attribute_name" value="branch" />
+      <input type="hidden" name="operator" value="=" />
+      <div class="form-group">
+        <label for="branch_value">Target Branch</label>
+        <div style="display:flex; gap:8px;">
+          <input id="branch_value" name="attribute_value" type="text" placeholder="e.g., CSE" required />
+          <button class="btn btn-primary btn-sm" type="submit">Add</button>
+        </div>
+      </div>
+    </form>
+    <div class="sep"></div>
+    <form method="POST" action="/forms/{{ form_id }}/rules">
+      <input type="hidden" name="attribute_name" value="cgpa" />
+      <input type="hidden" name="operator" value=">=" />
+      <div class="form-group">
+        <label for="cgpa_value">Min. CGPA</label>
+        <div style="display:flex; gap:8px;">
+          <input id="cgpa_value" name="attribute_value" type="number" step="0.01" min="0" max="10" placeholder="e.g., 7.50" required />
+          <button class="btn btn-primary btn-sm" type="submit">Add</button>
+        </div>
+      </div>
+    </form>
+  </aside>
+</div>
+{% endblock %}

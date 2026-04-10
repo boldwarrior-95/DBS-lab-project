@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}D-SCAE{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>D-SCAE</h1>
+    <p>Data Collection Engine</p>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}">
+      <span>◆</span> Dashboard
+    </a>
+    {% if session.role == 'admin' %}
+    <a href="/forms/new" class="nav-item {% if request.path == '/forms/new' %}active{% endif %}">
+      <span>+</span> New Form
+    </a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-user">
+    <div class="name">{{ session.username }}</div>
+    <div class="role">{{ session.role }}</div>
+    <a href="/logout">← Sign out</a>
+  </div>
+</aside>
+
+<main class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}
+  {% endblock %}
+</main>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}D-SCAE — Submit Form{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+  <div>
+    <h1 class="page-title">{{ form.title if form and form.title else ("Form #" ~ form_id) }}</h1>
+    <p class="page-sub">Fill out the required fields to submit your response.</p>
+  </div>
+  <a class="btn btn-outline btn-sm" href="/dashboard">← Back</a>
+</div>
+
+<div class="card" style="max-width:700px;">
+  {% if fields and fields|length > 0 %}
+  <form method="POST" action="/forms/{{ form_id }}/submit">
+    <div style="display:grid; gap:20px;">
+      {% for f in fields %}
+      <div class="form-group" style="margin-bottom:0;">
+        <label for="field_{{ f.field_id }}" style="font-size:12px; color:var(--text);">
+          {{ f.field_name }}
+          {% if f.is_required %}<span style="color:var(--danger); margin-left:2px;">*</span>{% endif %}
+        </label>
+        {% set ft = (f.field_type or '')|upper %}
+        {% if ft == 'NUMERIC' %}
+          <input id="field_{{ f.field_id }}" name="field_{{ f.field_id }}" type="number" step="any" {% if f.is_required %}required{% endif %} autocomplete="off" />
+        {% elif ft == 'DATE' %}
+          <input id="field_{{ f.field_id }}" name="field_{{ f.field_id }}" type="date" {% if f.is_required %}required{% endif %} autocomplete="off" />
+        {% else %}
+          <input id="field_{{ f.field_id }}" name="field_{{ f.field_id }}" type="text" {% if f.is_required %}required{% endif %} autocomplete="off" />
+        {% endif %}
+        {% if f.validation_rule %}
+          <div style="font-size:10px; color:var(--text-3); margin-top:4px;" class="mono">Rule: {{ f.validation_rule }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:28px; border-top:1px solid var(--border); padding-top:20px;">
+      <a class="btn btn-outline" href="/dashboard">Cancel</a>
+      <button class="btn btn-primary" type="submit">Submit →</button>
+    </div>
+  </form>
+  {% else %}
+  <div style="text-align:center; padding:40px; color:var(--text-3); border:1px dashed var(--border); border-radius:var(--radius);">No fields configured yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

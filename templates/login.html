@@ -1,0 +1,52 @@
+{% extends "auth_base.html" %}
+{% block title %}D-SCAE — Login{% endblock %}
+
+{% block heading %}Welcome back{% endblock %}
+{% block subheading %}Sign in to your D-SCAE account to continue.{% endblock %}
+
+{% block hero_title %}Collect data with <span class="highlight">confidence</span>{% endblock %}
+{% block hero_desc %}Dynamic Schema Collection & Analytics Engine — build forms, set eligibility rules, and get real-time analytics all in one place.{% endblock %}
+
+{% block content %}
+<form method="POST" action="/login">
+  <div class="form-group">
+    <label for="username">Username</label>
+    <input id="username" type="text" name="username" placeholder="Enter your username" required autocomplete="username">
+  </div>
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input id="password" type="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+  </div>
+  <button class="btn btn-primary" type="submit" style="width: 100%; padding: 14px; margin-top: 8px; border-radius: 12px; font-size: 14px; font-weight: 700; letter-spacing: 0.5px;">
+    Sign In →
+  </button>
+  <div style="text-align:center; margin-top: 20px; font-size: 13px; color: var(--text-3);">
+    Don't have an account? <a href="/register" style="color: var(--accent); text-decoration: none; font-weight: 600;">Create one</a>
+  </div>
+</form>
+
+<!-- Test credentials box -->
+<div style="margin-top: 28px; padding: 20px; background: var(--bg-subtle); border-radius: 14px; border: 1px solid var(--border);">
+  <div style="font-size: 10px; font-weight: 600; color: var(--text-3); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; font-family: 'JetBrains Mono', monospace;">
+    🔑 Test Credentials
+  </div>
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface); border-radius: 10px; margin-bottom: 8px;">
+    <span style="color: var(--text-2); font-size: 13px; font-weight: 500;">
+      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 8px;"></span>Admin
+    </span>
+    <code class="mono" style="color: var(--accent); font-size: 12px; background: var(--accent-muted); padding: 3px 10px; border-radius: 6px;">admin1 / Admin@123</code>
+  </div>
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface); border-radius: 10px;">
+    <span style="color: var(--text-2); font-size: 13px; font-weight: 500;">
+      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--teal); margin-right: 8px;"></span>Student
+    </span>
+    <code class="mono" style="color: var(--teal); font-size: 12px; background: rgba(52,211,153,0.1); padding: 3px 10px; border-radius: 6px;">pranav / Student@123</code>
+  </div>
+</div>
+
+{% if demo_mode is defined and demo_mode %}
+<div style="text-align: center; margin-top: 16px;">
+  <span class="demo-pill">⚡ Demo Mode — No DB required</span>
+</div>
+{% endif %}
+{% endblock %}

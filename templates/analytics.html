@@ -1,0 +1,744 @@
+{% extends "base.html" %}
+{% block title %}D-SCAE — Analytics{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+  /* ── KPI Cards with gradient tops ── */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .kpi:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  }
+  .kpi::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .kpi:nth-child(1)::before { background: linear-gradient(90deg, var(--teal), #22d3ee); }
+  .kpi:nth-child(2)::before { background: linear-gradient(90deg, var(--sky), #818cf8); }
+  .kpi:nth-child(3)::before { background: linear-gradient(90deg, var(--accent), #f472b6); }
+
+  .kpi .kpi-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  .kpi:nth-child(1) .kpi-icon { background: rgba(52,211,153,0.1); color: var(--teal); }
+  .kpi:nth-child(2) .kpi-icon { background: rgba(96,165,250,0.1); color: var(--sky); }
+  .kpi:nth-child(3) .kpi-icon { background: rgba(232,168,56,0.1); color: var(--accent); }
+
+  .kpi .lbl {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 10px;
+  }
+  .kpi .val {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .kpi:nth-child(1) .val { color: var(--teal); }
+  .kpi:nth-child(2) .val { color: var(--sky); }
+  .kpi:nth-child(3) .val { color: var(--accent); }
+
+  .kpi .sub {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  /* Glow orbs */
+  .kpi .glow {
+    position: absolute;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    bottom: -50px; right: -40px;
+    opacity: 0.05;
+    pointer-events: none;
+  }
+  .kpi:nth-child(1) .glow { background: var(--teal); }
+  .kpi:nth-child(2) .glow { background: var(--sky); }
+  .kpi:nth-child(3) .glow { background: var(--accent); }
+
+  /* ── Charts grid — 2x2 layout ── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto auto;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .chart-card .chart-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 20px;
+  }
+  .chart-card .chart-subtitle {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 12px;
+    font-style: italic;
+  }
+
+  /* Ring chart */
+  .ring-card {
+    text-align: center;
+  }
+  .ring-canvas-wrap {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 16px;
+    position: relative;
+  }
+  .ring-pct {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+  }
+  .ring-legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .ring-legend span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ring-legend .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* Full-width cards */
+  .chart-full { grid-column: 1 / -1; }
+
+  /* ── Question grid ── */
+  .sec-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .q-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 20px;
+  }
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    animation: cardIn 0.4s ease-out both;
+  }
+  .q-card:nth-child(1) { animation-delay: 0.05s; }
+  .q-card:nth-child(2) { animation-delay: 0.10s; }
+  .q-card:nth-child(3) { animation-delay: 0.15s; }
+  .q-card:nth-child(4) { animation-delay: 0.20s; }
+
+  .q-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+
+  .q-card .q-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .q-card .q-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .q-card .q-fill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .q-fill.high   { background: rgba(52,211,153,0.12); color: var(--teal); }
+  .q-fill.medium { background: rgba(251,191,36,0.12); color: #fbbf24; }
+  .q-fill.low    { background: rgba(248,113,113,0.12); color: #f87171; }
+
+  .q-card .q-type {
+    display: inline-block;
+    font-size: 10px;
+    padding: 3px 10px;
+    background: rgba(167,139,250,0.1);
+    border: 1px solid rgba(167,139,250,0.15);
+    border-radius: 6px;
+    color: var(--violet);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .m-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .m-row.four-cols {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .m-box {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    transition: background 0.2s;
+  }
+  .m-box:hover {
+    background: var(--surface-2);
+  }
+  .m-box .m-lbl {
+    font-size: 9px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .m-box .m-val {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .m-box .m-val.teal { color: var(--teal); }
+  .m-box .m-val.sky  { color: var(--sky); }
+  .m-box .m-val.rose { color: #f87171; }
+  .m-box .m-val.accent { color: var(--accent); }
+
+  /* Top values badges */
+  .top-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .top-values .tv-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: rgba(96,165,250,0.08);
+    border: 1px solid rgba(96,165,250,0.15);
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--text-2);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tv-badge .tv-count {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--sky);
+    background: rgba(96,165,250,0.15);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  /* Boolean bar */
+  .bool-bar-wrap {
+    margin-top: 12px;
+  }
+  .bool-bar-track {
+    height: 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    overflow: hidden;
+    display: flex;
+  }
+  .bool-bar-yes {
+    height: 100%;
+    background: linear-gradient(90deg, #34d399, #22d3ee);
+    border-radius: 6px 0 0 6px;
+    transition: width 1s ease-out;
+  }
+  .bool-bar-no {
+    height: 100%;
+    background: linear-gradient(90deg, #f87171, #fb923c);
+    border-radius: 0 6px 6px 0;
+    transition: width 1s ease-out;
+  }
+  .bool-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--text-3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .bool-bar-labels .yes-lbl { color: var(--teal); }
+  .bool-bar-labels .no-lbl  { color: #f87171; }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* KPI entrance */
+  .kpi {
+    animation: kpiPop 0.5s ease-out both;
+  }
+  .kpi:nth-child(1) { animation-delay: 0.1s; }
+  .kpi:nth-child(2) { animation-delay: 0.2s; }
+  .kpi:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes kpiPop {
+    from { opacity: 0; transform: scale(0.92) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  @media (max-width: 768px) {
+    .charts-grid { grid-template-columns: 1fr; }
+    .chart-full  { grid-column: 1; }
+    .m-row       { grid-template-columns: repeat(2, 1fr); }
+    .m-row.four-cols { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+  <div>
+    <h1 class="page-title">{{ form.title if form and form.title else "Analytics" }}</h1>
+    <p class="page-sub">Participation and response breakdown.</p>
+  </div>
+  <div style="display:flex; gap:8px;">
+    {% if form and form.form_id %}
+      <a class="btn btn-outline btn-sm" href="/forms/{{ form.form_id }}/fields">Fields</a>
+      <a class="btn btn-outline btn-sm" href="/forms/{{ form.form_id }}/rules">Rules</a>
+    {% endif %}
+    <a class="btn btn-outline btn-sm" href="/dashboard">← Back</a>
+  </div>
+</div>
+
+{% set submitted = participation.submitted if participation and participation.submitted else 0 %}
+{% set total = participation.total if participation and participation.total else 0 %}
+{% set pct = (submitted / total * 100) if total else 0 %}
+
+<!-- ── KPI Cards ── -->
+<div class="kpis">
+  <div class="kpi">
+    <div class="kpi-icon">✓</div>
+    <div class="lbl">Submitted</div>
+    <div class="val" data-count="{{ submitted }}">0</div>
+    <div class="sub">Distinct students who responded</div>
+    <div class="glow"></div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-icon">⊡</div>
+    <div class="lbl">Total Students</div>
+    <div class="val" data-count="{{ total }}">0</div>
+    <div class="sub">Students with role = student</div>
+    <div class="glow"></div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-icon">◎</div>
+    <div class="lbl">Completion Rate</div>
+    <div class="val"><span id="pctVal">0</span>%</div>
+    <div class="sub">{{ submitted }} of {{ total }} responded</div>
+    <div class="glow"></div>
+  </div>
+</div>
+
+<!-- ── Charts Grid ── -->
+<div class="charts-grid">
+  <!-- 1. Participation Ring -->
+  <div class="chart-card ring-card">
+    <div class="chart-title">Participation Ratio</div>
+    <div class="ring-canvas-wrap">
+      <canvas id="ringChart"></canvas>
+      <div class="ring-pct" id="ringPct">0%</div>
+    </div>
+    <div class="ring-legend">
+      <span><span class="dot" style="background: var(--teal);"></span> Submitted</span>
+      <span><span class="dot" style="background: rgba(255,255,255,0.08);"></span> Pending</span>
+    </div>
+  </div>
+
+  <!-- 2. Submission Timeline -->
+  <div class="chart-card">
+    <div class="chart-title">Submission Timeline</div>
+    <div style="position: relative; height: 200px; width: 100%;">
+      <canvas id="timelineChart"></canvas>
+    </div>
+    <div class="chart-subtitle">Submissions received over time</div>
+  </div>
+
+  <!-- 3. Fill Rate per Question (shows how many % of submissions answered each question) -->
+  <div class="chart-card chart-full">
+    <div class="chart-title">Response Insights by Question</div>
+    <div style="position: relative; height: 260px; width: 100%;">
+      <canvas id="insightsChart"></canvas>
+    </div>
+    <div class="chart-subtitle">Fill rate, unique answers, and response count per question — hover for details</div>
+  </div>
+</div>
+
+<!-- ── Question Metrics ── -->
+<div class="sec-title">Question Breakdown</div>
+
+{% if stats and stats|length > 0 %}
+<div class="q-grid">
+  {% for s in stats %}
+  <div class="q-card">
+    <div class="q-header">
+      <div class="q-name">{{ s.field_name }}</div>
+      <div class="q-fill {% if s.fill_rate >= 80 %}high{% elif s.fill_rate >= 50 %}medium{% else %}low{% endif %}">
+        {{ s.fill_rate }}% filled
+      </div>
+    </div>
+    <div class="q-type">{{ s.field_type }}</div>
+
+    {% if s.field_type == 'NUMERIC' %}
+    <div class="m-row four-cols">
+      <div class="m-box"><div class="m-lbl">Responses</div><div class="m-val">{{ s.total }}</div></div>
+      <div class="m-box"><div class="m-lbl">Average</div><div class="m-val accent">{% if s.avg_val is not none %}{{ s.avg_val }}{% else %}—{% endif %}</div></div>
+      <div class="m-box"><div class="m-lbl">Min</div><div class="m-val sky">{% if s.min_val is not none %}{{ s.min_val|int }}{% else %}—{% endif %}</div></div>
+      <div class="m-box"><div class="m-lbl">Max</div><div class="m-val teal">{% if s.max_val is not none %}{{ s.max_val|int }}{% else %}—{% endif %}</div></div>
+    </div>
+    {% elif s.field_type == 'BOOLEAN' %}
+    <div class="m-row">
+      <div class="m-box"><div class="m-lbl">Responses</div><div class="m-val">{{ s.total }}</div></div>
+      <div class="m-box"><div class="m-lbl">Yes</div><div class="m-val teal">{{ s.yes_count }}</div></div>
+      <div class="m-box"><div class="m-lbl">No</div><div class="m-val rose">{{ s.no_count }}</div></div>
+    </div>
+    {% set yes_pct = (s.yes_count / s.total * 100)|round(1) if s.total else 0 %}
+    {% set no_pct  = (s.no_count / s.total * 100)|round(1) if s.total else 0 %}
+    <div class="bool-bar-wrap">
+      <div class="bool-bar-track">
+        <div class="bool-bar-yes" style="width: {{ yes_pct }}%;"></div>
+        <div class="bool-bar-no" style="width: {{ no_pct }}%;"></div>
+      </div>
+      <div class="bool-bar-labels">
+        <span class="yes-lbl">Yes {{ yes_pct }}%</span>
+        <span class="no-lbl">No {{ no_pct }}%</span>
+      </div>
+    </div>
+    {% else %}
+    <div class="m-row">
+      <div class="m-box"><div class="m-lbl">Responses</div><div class="m-val">{{ s.total }}</div></div>
+      <div class="m-box"><div class="m-lbl">Unique</div><div class="m-val sky">{{ s.distinct_count }}</div></div>
+      <div class="m-box"><div class="m-lbl">Fill Rate</div><div class="m-val accent">{{ s.fill_rate }}%</div></div>
+    </div>
+    {% endif %}
+
+    {% if s.top_values and s.top_values|length > 0 %}
+    <div class="top-values">
+      {% for val, count in s.top_values %}
+      <span class="tv-badge">{{ val|truncate(20, true, '…') }} <span class="tv-count">×{{ count }}</span></span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div style="text-align:center; padding:60px; color:var(--text-3); border:1px dashed var(--border); border-radius:var(--radius-lg);">
+  <div style="font-size:40px; margin-bottom:16px; opacity:0.2;">◇</div>
+  <p>No analytics data yet.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const submitted = {{ participation.submitted if participation and participation.submitted else 0 }};
+  const total = {{ participation.total if participation and participation.total else 0 }};
+  const pct = total > 0 ? parseFloat((submitted / total * 100).toFixed(1)) : 0;
+  const pending = total - submitted;
+
+  // Shared tooltip style
+  const tooltipStyle = {
+    backgroundColor: '#1a1823',
+    titleColor: '#e8e4df',
+    bodyColor: '#a09a91',
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    cornerRadius: 10,
+    padding: 12,
+  };
+  const gridColor = 'rgba(255,255,255,0.04)';
+  const tickFont = { family: "'JetBrains Mono', monospace", size: 10 };
+  const tickColor = '#6b6560';
+
+  // ── Animate KPI numbers ──
+  document.querySelectorAll('.kpi .val[data-count]').forEach(el => {
+    const target = parseInt(el.dataset.count, 10);
+    if (isNaN(target) || target === 0) { el.textContent = '0'; return; }
+    let current = 0;
+    const duration = 1200;
+    const step = Math.max(1, Math.floor(target / (duration / 30)));
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= target) { current = target; clearInterval(timer); }
+      el.textContent = current;
+    }, 30);
+  });
+
+  // Animate percentage
+  const pctEl = document.getElementById('pctVal');
+  if (pctEl && pct > 0) {
+    let cur = 0;
+    const timer2 = setInterval(() => {
+      cur += 0.5;
+      if (cur >= pct) { cur = pct; clearInterval(timer2); }
+      pctEl.textContent = cur.toFixed(1);
+    }, 20);
+  }
+
+  // ── 1. Ring Chart ──
+  const ringCtx = document.getElementById('ringChart');
+  if (ringCtx) {
+    const ringPctEl = document.getElementById('ringPct');
+    new Chart(ringCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Submitted', 'Pending'],
+        datasets: [{
+          data: [submitted, pending > 0 ? pending : (total === 0 ? 1 : 0)],
+          backgroundColor: ['#34d399', 'rgba(255,255,255,0.06)'],
+          borderColor: ['rgba(52,211,153,0.3)', 'rgba(255,255,255,0.03)'],
+          borderWidth: 2,
+          hoverBackgroundColor: ['#2dd4a8', 'rgba(255,255,255,0.1)'],
+        }]
+      },
+      options: {
+        cutout: '78%',
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false }, tooltip: { ...tooltipStyle, enabled: true } },
+        animation: {
+          animateRotate: true,
+          duration: 1400,
+          easing: 'easeOutQuart',
+          onComplete: () => {
+            if (ringPctEl) ringPctEl.textContent = pct.toFixed(1) + '%';
+          }
+        }
+      }
+    });
+  }
+
+  // ── 2. Timeline Area Chart ──
+  const timelineCtx = document.getElementById('timelineChart');
+  if (timelineCtx) {
+    const tlLabels = {{ timeline_labels | tojson }};
+    const tlValues = {{ timeline_values | tojson }};
+
+    if (tlLabels.length > 0) {
+      const gradient = timelineCtx.getContext('2d').createLinearGradient(0, 0, 0, 200);
+      gradient.addColorStop(0, 'rgba(96,165,250,0.3)');
+      gradient.addColorStop(1, 'rgba(96,165,250,0.0)');
+
+      new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+          labels: tlLabels,
+          datasets: [{
+            label: 'Submissions',
+            data: tlValues,
+            fill: true,
+            backgroundColor: gradient,
+            borderColor: '#60a5fa',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#60a5fa',
+            pointBorderColor: '#1a1823',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              grid: { color: gridColor },
+              ticks: { color: tickColor, font: tickFont },
+              border: { color: 'rgba(255,255,255,0.06)' }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: gridColor },
+              ticks: { color: tickColor, font: tickFont, stepSize: 1 },
+              border: { color: 'rgba(255,255,255,0.06)' }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: tooltipStyle
+          },
+          animation: { duration: 1400, easing: 'easeOutQuart' }
+        }
+      });
+    }
+  }
+
+  // ── 3. Insights Chart — multi-metric per question ──
+  const insightsCtx = document.getElementById('insightsChart');
+  if (insightsCtx) {
+    const qLabels = [];
+    const fillRates = [];
+    const distinctCounts = [];
+    const responseCounts = [];
+
+    {% if stats and stats|length > 0 %}
+      {% for s in stats %}
+        qLabels.push("{{ s.field_name | truncate(18, true, '…') }}");
+        fillRates.push({{ s.fill_rate }});
+        distinctCounts.push({{ s.distinct_count }});
+        responseCounts.push({{ s.total }});
+      {% endfor %}
+    {% endif %}
+
+    if (qLabels.length > 0) {
+      new Chart(insightsCtx, {
+        type: 'bar',
+        data: {
+          labels: qLabels,
+          datasets: [
+            {
+              label: 'Fill Rate (%)',
+              data: fillRates,
+              backgroundColor: 'rgba(52,211,153,0.25)',
+              borderColor: '#34d399',
+              borderWidth: 1.5,
+              borderRadius: 6,
+              borderSkipped: false,
+              yAxisID: 'y',
+            },
+            {
+              label: 'Unique Answers',
+              data: distinctCounts,
+              backgroundColor: 'rgba(167,139,250,0.25)',
+              borderColor: '#a78bfa',
+              borderWidth: 1.5,
+              borderRadius: 6,
+              borderSkipped: false,
+              yAxisID: 'y1',
+            },
+            {
+              label: 'Total Responses',
+              data: responseCounts,
+              backgroundColor: 'rgba(96,165,250,0.25)',
+              borderColor: '#60a5fa',
+              borderWidth: 1.5,
+              borderRadius: 6,
+              borderSkipped: false,
+              yAxisID: 'y1',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: {
+              grid: { color: gridColor },
+              ticks: { color: tickColor, font: tickFont },
+              border: { color: 'rgba(255,255,255,0.06)' }
+            },
+            y: {
+              type: 'linear',
+              position: 'left',
+              beginAtZero: true,
+              max: 100,
+              title: { display: true, text: 'Fill Rate %', color: tickColor, font: tickFont },
+              grid: { color: gridColor },
+              ticks: { color: '#34d399', font: tickFont, callback: v => v + '%' },
+              border: { color: 'rgba(255,255,255,0.06)' }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: true,
+              title: { display: true, text: 'Count', color: tickColor, font: tickFont },
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#a78bfa', font: tickFont, stepSize: 1 },
+              border: { color: 'rgba(255,255,255,0.06)' }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#a09a91',
+                font: tickFont,
+                usePointStyle: true,
+                pointStyle: 'rectRounded',
+                padding: 16,
+              }
+            },
+            tooltip: tooltipStyle
+          },
+          animation: { duration: 1200, easing: 'easeOutQuart' }
+        }
+      });
+    }
+  }
+});
+</script>
+{% endblock %}
